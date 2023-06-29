@@ -1,3 +1,5 @@
 # Monkey Interpreter
 
-Working through *Writing an Interpreter in Go* by Thornsten Ball
+A compiler written in Go to compile the Monkey language.
+
+Working through *Writing an Interpreter in Go* by Thornsten Ball. 
