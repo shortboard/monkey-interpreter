@@ -35,8 +35,8 @@ func TestLetStatements(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		stmt := program.Statements[i]
-		if !testLetStatement(t, stmt, tt.expectedIdentifier) {
+		statement := program.Statements[i]
+		if !testLetStatement(t, statement, tt.expectedIdentifier) {
 			return
 		}
 	}
@@ -61,15 +61,46 @@ func TestReturnStatements(t *testing.T) {
 		t.Fatalf("program.Statements does not contain 3 statements. got=%d", len(program.Statements))
 	}
 
-	for _, stmt := range program.Statements {
-		returnStmt, ok := stmt.(*ast.ReturnStatement)
+	for _, statement := range program.Statements {
+		returnstatement, ok := statement.(*ast.ReturnStatement)
 		if !ok {
-			t.Errorf("stmt not *ast.ReturnStatement. got=%T", stmt)
+			t.Errorf("statement not *ast.ReturnStatement. got=%T", statement)
 			continue
 		}
-		if returnStmt.TokenLiteral() != "return" {
-			t.Errorf("returnStmt.TokenLiteral() not 'return'. got=%q", returnStmt.TokenLiteral())
+		if returnstatement.TokenLiteral() != "return" {
+			t.Errorf("returnstatement.TokenLiteral() not 'return'. got=%q", returnstatement.TokenLiteral())
 		}
+	}
+}
+
+func TestIdentifierExpression(t *testing.T) {
+	input := `foobar;`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program has not enough statements. got=%d", len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T", program.Statements[0])
+	}
+
+	identifier, ok := statement.Expression.(*ast.Identifier)
+	if !ok {
+		t.Fatalf("expression not *ast.Identifier. got=%T", statement.Expression)
+	}
+
+	if identifier.Value != "foobar" {
+		t.Errorf("identifier.Value not %s. got=%s", "foobar", identifier.Value)
+	}
+
+	if identifier.TokenLiteral() != "foobar" {
+		t.Errorf("identifier.TokenLiteral() not %s. got=%s", "foobar", identifier.TokenLiteral())
 	}
 }
 
@@ -79,19 +110,19 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 		return false
 	}
 
-	letStmt, ok := s.(*ast.LetStatement)
+	letstatement, ok := s.(*ast.LetStatement)
 	if !ok {
 		t.Errorf("s not *ast.LetStatement. got=%T", s)
 		return false
 	}
 
-	if letStmt.Name.Value != name {
-		t.Errorf("letStmt.Name.Value not '%s'. got=%s", name, letStmt.Name.Value)
+	if letstatement.Name.Value != name {
+		t.Errorf("letstatement.Name.Value not '%s'. got=%s", name, letstatement.Name.Value)
 		return false
 	}
 
-	if letStmt.Name.TokenLiteral() != name {
-		t.Errorf("letStmt.Name.TokenLiteral() not '%s'. got=%s", name, letStmt.Name.TokenLiteral())
+	if letstatement.Name.TokenLiteral() != name {
+		t.Errorf("letstatement.Name.TokenLiteral() not '%s'. got=%s", name, letstatement.Name.TokenLiteral())
 		return false
 	}
 

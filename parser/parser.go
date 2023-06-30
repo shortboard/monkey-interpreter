@@ -8,13 +8,31 @@ import (
 	"github.com/shortboard/monkey-interpreter/token"
 )
 
+const (
+	_ int = iota
+	LOWEST
+	EQUALS  // == LESSGREATER // > or <
+	SUM     // +
+	PRODUCT // *
+	PREFIX  // -X or !X
+	CALL    // myFunction(X)
+)
+
 type Parser struct {
 	l      *lexer.Lexer
 	errors []string
 
 	currentToken token.Token
 	peekToken    token.Token
+
+	prefixParseFunctions map[token.TokenType]prefixParseFunction
+	infixParseFunctions  map[token.TokenType]infixParseFunction
 }
+
+type (
+	prefixParseFunction func() ast.Expression
+	infixParseFunction  func(ast.Expression) ast.Expression
+)
 
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{
@@ -25,6 +43,9 @@ func New(l *lexer.Lexer) *Parser {
 	// Read two tokens, so curToken and peekToken are both set
 	p.nextToken()
 	p.nextToken()
+
+	p.prefixParseFunctions = make(map[token.TokenType]prefixParseFunction)
+	p.registerPrefix(token.IDENT, p.parseIdentifier)
 
 	return p
 }
@@ -61,7 +82,7 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
-		return nil
+		return p.parseExpressionStatement()
 	}
 }
 
@@ -98,6 +119,33 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	return statement
 }
 
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	statement := &ast.ExpressionStatement{Token: p.currentToken}
+
+	statement.Expression = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return statement
+}
+
+func (p *Parser) parseExpression(precedence int) ast.Expression {
+	fmt.Println("Parsing Expression")
+	prefix := p.prefixParseFunctions[p.currentToken.Type]
+	if prefix == nil {
+		return nil
+	}
+	leftExpression := prefix()
+
+	return leftExpression
+}
+
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+}
+
 func (p *Parser) currentTokenIs(tokenType token.TokenType) bool {
 	return p.currentToken.Type == tokenType
 }
@@ -119,4 +167,12 @@ func (p *Parser) peekError(t token.TokenType) {
 	msg := fmt.Sprintf("expected next token to be %s, got %s instead",
 		t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
+}
+
+func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFunction) {
+	p.prefixParseFunctions[tokenType] = fn
+}
+
+func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFunction) {
+	p.infixParseFunctions[tokenType] = fn
 }
