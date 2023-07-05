@@ -93,7 +93,6 @@ func (p *Parser) nextToken() {
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
-	fmt.Println("Parsing Program")
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
 

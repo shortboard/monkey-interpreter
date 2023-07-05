@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/shortboard/monkey-interpreter/evaluator"
 	"github.com/shortboard/monkey-interpreter/lexer"
 	"github.com/shortboard/monkey-interpreter/parser"
 )
@@ -27,15 +28,21 @@ func Start(in io.Reader, out io.Writer) {
 
 		program := p.ParseProgram()
 
-		// If there are any parser errors, print them and continue to the next line
 		if len(p.Errors()) != 0 {
 			printParserErrors(out, p.Errors())
 			continue
 		}
 
-		// Print the AST
-		io.WriteString(out, program.String())
-		io.WriteString(out, "\n")
+		evaluated := evaluator.Eval(program)
+		if len(p.Errors()) != 0 {
+			printParserErrors(out, p.Errors())
+			continue
+		}
+
+		if evaluated != nil {
+			io.WriteString(out, evaluated.Inspect())
+			io.WriteString(out, "\n")
+		}
 
 	}
 }
