@@ -7,6 +7,7 @@ import (
 
 	"github.com/shortboard/monkey-interpreter/evaluator"
 	"github.com/shortboard/monkey-interpreter/lexer"
+	"github.com/shortboard/monkey-interpreter/object"
 	"github.com/shortboard/monkey-interpreter/parser"
 )
 
@@ -14,6 +15,7 @@ const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
+	env := object.NewEnvironment()
 
 	for {
 		fmt.Fprint(out, PROMPT)
@@ -33,7 +35,7 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		evaluated := evaluator.Eval(program)
+		evaluated := evaluator.Eval(program, env)
 		if len(p.Errors()) != 0 {
 			printParserErrors(out, p.Errors())
 			continue
