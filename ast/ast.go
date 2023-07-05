@@ -62,8 +62,6 @@ func (ls *LetStatement) String() string {
 		out.WriteString(ls.Value.String())
 	}
 
-	out.WriteString(";")
-
 	return out.String()
 }
 
@@ -92,8 +90,6 @@ func (ls *ReturnStatement) String() string {
 		out.WriteString(ls.ReturnValue.String())
 	}
 
-	out.WriteString(";")
-
 	return out.String()
 }
 
@@ -110,8 +106,6 @@ func (ls *ExpressionStatement) String() string {
 	if ls.Expression != nil {
 		out.WriteString(ls.Expression.String())
 	}
-
-	out.WriteString(";")
 
 	return out.String()
 }
